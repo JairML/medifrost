@@ -1,12 +1,11 @@
 // Construye la aplicación Express. Recibe el repositorio por parámetro para poder
 // probarla con datos en memoria sin depender de Supabase.
-// Base del backend – Tarea T07 (Jair Menéndez). Las rutas de refrigeradoras y
-// sensores se agregan en la rama de HU21 (MF-26).
 const express = require('express');
 const cors = require('cors');
 const { usuarioDemo } = require('./middleware/autorizacion');
+const { rutasRefrigeradoras } = require('./rutas/refrigeradoras');
+const { rutasSensores } = require('./rutas/sensores');
 
-// eslint-disable-next-line no-unused-vars
 function crearApp(repo, { origenPermitido = '*' } = {}) {
   const app = express();
   app.use(cors({ origin: origenPermitido }));
@@ -14,6 +13,8 @@ function crearApp(repo, { origenPermitido = '*' } = {}) {
   app.use(usuarioDemo);
 
   app.get('/api/salud', (_req, res) => res.json({ estado: 'ok', servicio: 'medifrost-backend' }));
+  app.use('/api/refrigeradoras', rutasRefrigeradoras(repo));
+  app.use('/api/sensores', rutasSensores(repo));
 
   app.use((_req, res) => res.status(404).json({ errores: ['Ruta no encontrada.'] }));
 
