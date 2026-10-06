@@ -1,6 +1,7 @@
-// Rutas de refrigeradoras (HU21). La configuración de alertas (HU11) se agrega en la rama MF-16.
+// Rutas de refrigeradoras (HU21) y de su configuración de alertas (HU11).
 const { Router } = require('express');
 const { validarRefrigeradora, estadoCalibracion } = require('../validacion/inventario');
+const { validarConfiguracion } = require('../validacion/configuracion');
 const { autorizar } = require('../middleware/autorizacion');
 const { ErrorNoEncontrado } = require('../errores');
 
@@ -36,6 +37,23 @@ function rutasRefrigeradoras(repo) {
     const v = validarRefrigeradora(req.body, { parcial: true });
     if (!v.valido) return res.status(400).json({ errores: v.errores });
     res.json(await repo.actualizarRefrigeradora(req.params.id, v.valor));
+  });
+
+  // GET /api/refrigeradoras/:id/configuracion (HU11)
+  r.get('/:id/configuracion', async (req, res) => {
+    const ref = await repo.obtenerRefrigeradora(req.params.id);
+    if (!ref) throw new ErrorNoEncontrado('La refrigeradora no existe.');
+    res.json({ temp_min: Number(ref.temp_min), temp_max: Number(ref.temp_max), tolerancia_min: ref.tolerancia_min });
+  });
+
+  // PUT /api/refrigeradoras/:id/configuracion (HU11-1 y HU11-2)
+  r.put('/:id/configuracion', autorizar(['administrador', 'directora_tecnica']), async (req, res) => {
+    const v = validarConfiguracion(req.body);
+    if (!v.valido) return res.status(400).json({ errores: v.errores });
+    const ref = await repo.obtenerRefrigeradora(req.params.id);
+    if (!ref) throw new ErrorNoEncontrado('La refrigeradora no existe.');
+    const actualizada = await repo.actualizarRefrigeradora(req.params.id, v.valor);
+    res.json({ temp_min: Number(actualizada.temp_min), temp_max: Number(actualizada.temp_max), tolerancia_min: actualizada.tolerancia_min });
   });
 
   return r;
