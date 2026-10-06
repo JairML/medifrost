@@ -1,0 +1,73 @@
+:root {
+  --fondo: #f3f7fa;
+  --superficie: #ffffff;
+  --texto: #14232f;
+  --suave: #5b6b78;
+  --borde: #d5e0e8;
+  --acento: #0b6e99;
+  --acento-texto: #ffffff;
+  --ok-fondo: #e3f4ea; --ok-texto: #1d6b3a;
+  --aviso-fondo: #fff4d6; --aviso-texto: #7a5300;
+  --error-fondo: #fde7e7; --error-texto: #9b1c1c;
+  --neutro-fondo: #eceff2; --neutro-texto: #4a5560;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0e161c; --superficie: #16222b; --texto: #e3ecf2; --suave: #9db0bd; --borde: #2a3a46;
+    --acento: #3fa9d6; --acento-texto: #06131b;
+    --ok-fondo: #143224; --ok-texto: #8fdcab;
+    --aviso-fondo: #3a2d0c; --aviso-texto: #f3cf74;
+    --error-fondo: #3d1717; --error-texto: #f4a4a4;
+    --neutro-fondo: #24313b; --neutro-texto: #b7c4ce;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); color: var(--texto); }
+.app { max-width: 1100px; margin: 0 auto; padding: 24px 16px 40px; }
+
+.cabecera { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
+.marca { display: flex; gap: 12px; align-items: center; }
+.logo { font-size: 32px; color: var(--acento); }
+.marca h1 { margin: 0; font-size: 26px; }
+.marca p { margin: 2px 0 0; color: var(--suave); font-size: 14px; }
+.rol { display: flex; flex-direction: column; font-size: 12px; color: var(--suave); gap: 4px; }
+
+.pestanas { display: flex; gap: 8px; margin: 24px 0 8px; border-bottom: 1px solid var(--borde); flex-wrap: wrap; }
+.pestanas button { background: none; color: var(--suave); border: none; border-bottom: 3px solid transparent; border-radius: 0; padding: 10px 4px; margin-right: 16px; }
+.pestanas button.activa { color: var(--texto); border-bottom-color: var(--acento); font-weight: 600; }
+
+.pagina h2 { font-size: 20px; margin: 20px 0 12px; }
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 16px; margin: 16px 0; }
+.formulario h3 { margin: 0 0 12px; font-size: 16px; }
+.fila { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.fila label { flex: 1 1 200px; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--suave); }
+input, select { font: inherit; color: var(--texto); background: var(--fondo); border: 1px solid var(--borde); border-radius: 6px; padding: 8px 10px; }
+input:focus, select:focus, button:focus-visible { outline: 2px solid var(--acento); outline-offset: 1px; }
+input:disabled { opacity: .6; }
+
+button { font: inherit; background: var(--acento); color: var(--acento-texto); border: 1px solid var(--acento); border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+button.secundario { background: transparent; color: var(--acento); }
+.botones, .acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.tabla-contenedor { overflow-x: auto; background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); }
+td small { color: var(--suave); }
+tr.inactiva td { opacity: .55; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.chip { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.chip.ok, .mensaje.ok { background: var(--ok-fondo); color: var(--ok-texto); }
+.chip.aviso { background: var(--aviso-fondo); color: var(--aviso-texto); }
+.chip.error, .mensaje.error { background: var(--error-fondo); color: var(--error-texto); }
+.chip.neutro { background: var(--neutro-fondo); color: var(--neutro-texto); }
+
+.mensaje { padding: 10px 12px; border-radius: 6px; margin: 12px 0; font-size: 14px; }
+ul.mensaje { padding-left: 28px; }
+.nota { color: var(--suave); font-size: 14px; max-width: 70ch; }
+.pie { margin-top: 40px; color: var(--suave); font-size: 12px; }
