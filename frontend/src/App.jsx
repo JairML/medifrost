@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { fijarRol } from './api.js';
 import Refrigeradoras from './paginas/Refrigeradoras.jsx';
+import Configuracion from './paginas/Configuracion.jsx';
 
 const ROLES = [
   { valor: 'administrador', etiqueta: 'Administrador' },
@@ -9,7 +10,7 @@ const ROLES = [
 ];
 
 export default function App() {
-  const [pagina, setPagina] = useState('refrigeradoras');   // la pestaña «Rango y tolerancia» llega con HU11
+  const [pagina, setPagina] = useState('refrigeradoras');
   const [rol, setRol] = useState('administrador');
 
   function cambiarRol(e) {
@@ -39,10 +40,13 @@ export default function App() {
         <button className={pagina === 'refrigeradoras' ? 'activa' : ''} onClick={() => setPagina('refrigeradoras')}>
           Refrigeradoras y sensores
         </button>
+        <button className={pagina === 'configuracion' ? 'activa' : ''} onClick={() => setPagina('configuracion')}>
+          Rango y tolerancia
+        </button>
       </nav>
 
       <main>
-        <Refrigeradoras rol={rol} />
+        {pagina === 'refrigeradoras' ? <Refrigeradoras rol={rol} /> : <Configuracion rol={rol} />}
       </main>
 
       <footer className="pie">
