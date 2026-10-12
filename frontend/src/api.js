@@ -34,4 +34,5 @@ export const api = {
   guardarConfiguracion: (id, datos) => pedir(`/refrigeradoras/${id}/configuracion`, { metodo: 'PUT', cuerpo: datos }),
   crearSensor: (datos) => pedir('/sensores', { metodo: 'POST', cuerpo: datos }),
   actualizarSensor: (id, datos) => pedir(`/sensores/${id}`, { metodo: 'PUT', cuerpo: datos }),
+  obtenerEstado: () => pedir('/estado'), // HU06
 };

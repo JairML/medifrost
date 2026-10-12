@@ -71,3 +71,38 @@ tr.inactiva td { opacity: .55; }
 ul.mensaje { padding-left: 28px; }
 .nota { color: var(--suave); font-size: 14px; max-width: 70ch; }
 .pie { margin-top: 40px; color: var(--suave); font-size: 12px; }
+
+/* ---------- HU06 · Estado actual (T10) ---------- */
+:root { --normal: #1d8a4b; --alerta: #c62828; --gris: #6b7884; }
+@media (prefers-color-scheme: dark) { :root { --normal: #4cc47f; --alerta: #ff6b6b; --gris: #8d9ba7; } }
+.estado-cabecera { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between; }
+.estado-cabecera h2 { margin-bottom: 4px; }
+.estado-cabecera .nota { margin: 0; display: flex; align-items: center; gap: 8px; }
+.pulso { width: 8px; height: 8px; border-radius: 50%; background: var(--normal); box-shadow: 0 0 0 0 var(--normal); animation: pulso 2s infinite; }
+.pulso.caido { background: var(--gris); animation: none; }
+@keyframes pulso { 0% { box-shadow: 0 0 0 0 rgba(29,138,75,.5); } 70% { box-shadow: 0 0 0 8px rgba(29,138,75,0); } 100% { box-shadow: 0 0 0 0 rgba(29,138,75,0); } }
+@media (prefers-reduced-motion: reduce) { .pulso { animation: none; } }
+.estado-resumen { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
+.estado-grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
+.estado-tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+.estado-tarjeta.alerta { border-color: var(--alerta); box-shadow: 0 0 0 1px var(--alerta) inset; }
+.estado-tarjeta header { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.estado-tarjeta h3 { margin: 0; font-size: 16px; }
+.estado-tarjeta header p { margin: 2px 0 0; color: var(--suave); font-size: 13px; }
+.estado-chip { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; }
+.estado-chip.normal { background: var(--normal); }
+.estado-chip.alerta { background: var(--alerta); }
+.estado-chip.sin-senal { background: var(--gris); }
+@media (prefers-color-scheme: dark) { .estado-chip { color: #0b1217; } }
+.estado-temp { margin: 8px 0 0; display: flex; align-items: baseline; gap: 4px; font-variant-numeric: tabular-nums; }
+.estado-temp .valor { font-size: 52px; font-weight: 700; line-height: 1; }
+.estado-temp .unidad { font-size: 20px; color: var(--suave); }
+.estado-tarjeta.normal .valor { color: var(--normal); }
+.estado-tarjeta.alerta .valor { color: var(--alerta); }
+.estado-tarjeta.sin-senal .valor { color: var(--gris); }
+.estado-motivo { margin: 0; font-size: 14px; }
+.estado-datos { margin: 8px 0 0; display: grid; gap: 4px; font-size: 13px; }
+.estado-datos div { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--borde); padding-top: 4px; }
+.estado-datos dt { color: var(--suave); }
+.estado-datos dd { margin: 0; text-align: right; }
+.estado-datos small { color: var(--suave); }

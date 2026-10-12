@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { fijarRol } from './api.js';
 import Refrigeradoras from './paginas/Refrigeradoras.jsx';
 import Configuracion from './paginas/Configuracion.jsx';
+import Estado from './paginas/Estado.jsx';
 
 const ROLES = [
   { valor: 'administrador', etiqueta: 'Administrador' },
@@ -10,7 +11,7 @@ const ROLES = [
 ];
 
 export default function App() {
-  const [pagina, setPagina] = useState('refrigeradoras');
+  const [pagina, setPagina] = useState('estado');
   const [rol, setRol] = useState('administrador');
 
   function cambiarRol(e) {
@@ -37,6 +38,9 @@ export default function App() {
       </header>
 
       <nav className="pestanas" aria-label="Secciones">
+        <button className={pagina === 'estado' ? 'activa' : ''} onClick={() => setPagina('estado')}>
+          Estado actual
+        </button>
         <button className={pagina === 'refrigeradoras' ? 'activa' : ''} onClick={() => setPagina('refrigeradoras')}>
           Refrigeradoras y sensores
         </button>
@@ -46,7 +50,9 @@ export default function App() {
       </nav>
 
       <main>
-        {pagina === 'refrigeradoras' ? <Refrigeradoras rol={rol} /> : <Configuracion rol={rol} />}
+        {pagina === 'estado' && <Estado />}
+        {pagina === 'refrigeradoras' && <Refrigeradoras rol={rol} />}
+        {pagina === 'configuracion' && <Configuracion rol={rol} />}
       </main>
 
       <footer className="pie">
