@@ -1,0 +1,4 @@
+.pio/
+.vscode/
+# Credenciales del nodo (WiFi y clave de Supabase): nunca se suben
+config.h
