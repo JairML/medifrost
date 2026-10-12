@@ -8,6 +8,7 @@ const { CONFIG_POR_DEFECTO } = require('../constantes');
 function crearRepositorioMemoria() {
   const refrigeradoras = new Map();
   const sensores = new Map();
+  const lecturas = []; // HU06: lecturas en memoria (pruebas y modo demo)
 
   const copia = (obj) => (obj ? { ...obj } : null);
 
@@ -75,6 +76,24 @@ function crearRepositorioMemoria() {
       const actualizado = { ...actual, ...datos };
       sensores.set(id, actualizado);
       return copia(actualizado);
+    },
+
+    // HU02/HU06: en Supabase las inserta el ESP32; aquí las usan las pruebas y el simulador del modo demo.
+    async registrarLectura({ dispositivo_id, temperatura = null, estado = 'ok', medido_en = new Date().toISOString() }) {
+      if (lecturas.some((l) => l.dispositivo_id === dispositivo_id && l.medido_en === medido_en)) {
+        throw new ErrorConflicto('La lectura ya fue registrada.');
+      }
+      const nueva = { dispositivo_id, temperatura, estado, medido_en };
+      lecturas.push(nueva);
+      return copia(nueva);
+    },
+
+    async ultimaLectura(dispositivoId) {
+      let ultima = null;
+      for (const l of lecturas) {
+        if (l.dispositivo_id === dispositivoId && (!ultima || l.medido_en > ultima.medido_en)) ultima = l;
+      }
+      return copia(ultima);
     },
   };
 }
