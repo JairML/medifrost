@@ -51,6 +51,17 @@ function crearRepositorioSupabase({ url, claveServicio }) {
     },
     crearSensor: (datos) => ejecutar(db.from('sensor').insert(datos).select().single()),
     actualizarSensor: (id, datos) => ejecutar(db.from('sensor').update(datos).eq('id', id).select().single()),
+    // HU06: última lectura de un dispositivo (el backend usa la clave secreta, que sí puede leer)
+    ultimaLectura: async (dispositivoId) => {
+      const { data, error } = await db.from('lectura')
+        .select('dispositivo_id, temperatura, estado, medido_en')
+        .eq('dispositivo_id', dispositivoId)
+        .order('medido_en', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw traducirError(error);
+      return data;
+    },
   };
 }
 

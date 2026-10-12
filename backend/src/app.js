@@ -5,6 +5,7 @@ const cors = require('cors');
 const { usuarioDemo } = require('./middleware/autorizacion');
 const { rutasRefrigeradoras } = require('./rutas/refrigeradoras');
 const { rutasSensores } = require('./rutas/sensores');
+const { rutasEstado } = require('./rutas/estado');
 
 function crearApp(repo, { origenPermitido = '*' } = {}) {
   const app = express();
@@ -15,6 +16,7 @@ function crearApp(repo, { origenPermitido = '*' } = {}) {
   app.get('/api/salud', (_req, res) => res.json({ estado: 'ok', servicio: 'medifrost-backend' }));
   app.use('/api/refrigeradoras', rutasRefrigeradoras(repo));
   app.use('/api/sensores', rutasSensores(repo));
+  app.use('/api/estado', rutasEstado(repo));   // HU06
 
   app.use((_req, res) => res.status(404).json({ errores: ['Ruta no encontrada.'] }));
 
