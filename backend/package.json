@@ -1,6 +1,6 @@
 {
   "name": "medifrost-backend",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "API REST de MediFrost: refrigeradoras, sensores y configuración de alertas",
   "main": "src/server.js",
   "scripts": {
@@ -8,7 +8,8 @@
     "dev": "node --watch src/server.js",
     "demo": "node src/server.js --demo",
     "test": "jest --coverage --passWithNoTests",
-    "simular": "node scripts/simular-nodo.js"
+    "simular": "node scripts/simular-nodo.js",
+    "probar-correo": "node scripts/probar-correo.js"
   },
   "engines": {
     "node": ">=20"
@@ -18,7 +19,8 @@
     "@supabase/supabase-js": "^2.117.2",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "nodemailer": "^8.0.11"
   },
   "devDependencies": {
     "jest": "^30.5.2",
