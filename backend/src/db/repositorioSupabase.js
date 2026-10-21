@@ -7,7 +7,10 @@ const MENSAJES_UNICIDAD = {
   sensor_codigo_key: 'Ya existe un sensor con ese código.',
   sensor_dispositivo_id_key: 'Ese dispositivo ya está registrado.',
   sensor_refrigeradora_id_key: 'Esa refrigeradora ya tiene un sensor vinculado.',
+  alerta_abierta_unica: 'Ya hay una alerta abierta de ese tipo para la refrigeradora.',
 };
+
+const ESTADOS_ABIERTOS = ['pendiente', 'activa', 'atendida'];
 
 function traducirError(error) {
   if (!error) return null;
@@ -54,13 +57,40 @@ function crearRepositorioSupabase({ url, claveServicio }) {
     // HU06: última lectura de un dispositivo (el backend usa la clave secreta, que sí puede leer)
     ultimaLectura: async (dispositivoId) => {
       const { data, error } = await db.from('lectura')
-        .select('dispositivo_id, temperatura, estado, medido_en')
+        .select('dispositivo_id, temperatura, estado, medido_en, alimentacion, bateria_pct')
         .eq('dispositivo_id', dispositivoId)
         .order('medido_en', { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw traducirError(error);
       return data;
+    },
+
+    // ---- Alertas (HU12, HU13, HU04): solo el backend puede leerlas y escribirlas (RLS) ----
+    crearAlerta: (datos) => ejecutar(db.from('alerta').insert(datos).select().single()),
+    actualizarAlerta: (id, cambios) => ejecutar(db.from('alerta').update(cambios).eq('id', id).select().single()),
+    obtenerAlerta: async (id) => {
+      const { data, error } = await db.from('alerta').select('*').eq('id', id).maybeSingle();
+      if (error) throw traducirError(error);
+      return data;
+    },
+    alertasAbiertas: (refrigeradoraId) => ejecutar(
+      db.from('alerta').select('*').eq('refrigeradora_id', refrigeradoraId).in('estado', ESTADOS_ABIERTOS),
+    ),
+    listarAlertas: ({ estados = null, refrigeradoraId = null, limite = 50 } = {}) => {
+      let consulta = db.from('alerta').select('*').order('inicio_en', { ascending: false }).limit(limite);
+      if (estados) consulta = consulta.in('estado', estados);
+      if (refrigeradoraId) consulta = consulta.eq('refrigeradora_id', refrigeradoraId);
+      return ejecutar(consulta);
+    },
+
+    // ---- Eventos del nodo (HU04): los inserta el ESP32; el backend los marca como procesados ----
+    eventosPendientes: () => ejecutar(
+      db.from('evento_nodo').select('*').is('procesado_en', null).order('id', { ascending: true }).limit(100),
+    ),
+    marcarEventoProcesado: async (id, fecha = new Date().toISOString()) => {
+      const { error } = await db.from('evento_nodo').update({ procesado_en: fecha }).eq('id', id);
+      if (error) throw traducirError(error);
     },
   };
 }
