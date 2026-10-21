@@ -6,8 +6,17 @@ const { usuarioDemo } = require('./middleware/autorizacion');
 const { rutasRefrigeradoras } = require('./rutas/refrigeradoras');
 const { rutasSensores } = require('./rutas/sensores');
 const { rutasEstado } = require('./rutas/estado');
+const { rutasAlertas } = require('./rutas/alertas');
+const { rutasDemo } = require('./rutas/demo');
 
-function crearApp(repo, { origenPermitido = '*' } = {}) {
+/**
+ * @param {object} repo  repositorio (Supabase o en memoria)
+ * @param {object} [opciones]
+ * @param {string} [opciones.origenPermitido]  dominio del frontend (CORS)
+ * @param {Function} [opciones.reloj]          hora actual (las pruebas la fijan)
+ * @param {object} [opciones.demo]             { simulador, vigilante } solo en «npm run demo»
+ */
+function crearApp(repo, { origenPermitido = '*', reloj = () => new Date(), demo = null } = {}) {
   const app = express();
   app.use(cors({ origin: origenPermitido }));
   app.use(express.json());
@@ -17,6 +26,8 @@ function crearApp(repo, { origenPermitido = '*' } = {}) {
   app.use('/api/refrigeradoras', rutasRefrigeradoras(repo));
   app.use('/api/sensores', rutasSensores(repo));
   app.use('/api/estado', rutasEstado(repo));   // HU06
+  app.use('/api/alertas', rutasAlertas(repo, { reloj })); // HU12, HU13, HU04
+  if (demo) app.use('/api/demo', rutasDemo({ repo, ...demo })); // solo modo demo: probar alertas sin hardware
 
   app.use((_req, res) => res.status(404).json({ errores: ['Ruta no encontrada.'] }));
 
