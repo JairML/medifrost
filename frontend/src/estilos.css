@@ -106,3 +106,16 @@ ul.mensaje { padding-left: 28px; }
 .estado-datos dt { color: var(--suave); }
 .estado-datos dd { margin: 0; text-align: right; }
 .estado-datos small { color: var(--suave); }
+
+/* ---------- HU20 · Inicio de sesión (T30) ---------- */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+.login-tarjeta { width: 100%; max-width: 400px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; }
+.login-tarjeta h2 { margin: 8px 0 0; font-size: 18px; }
+.login-tarjeta button[type="submit"] { margin-top: 4px; padding: 10px 14px; }
+.login-tarjeta button:disabled { opacity: .7; cursor: wait; }
+.login-demo { font-size: 13px; margin: 4px 0 0; }
+.login-demo code { font-size: 12px; background: var(--neutro-fondo); padding: 1px 4px; border-radius: 4px; }
+.mensaje.aviso { background: var(--aviso-fondo); color: var(--aviso-texto); }
+.usuario { display: flex; align-items: center; gap: 12px; }
+.usuario > div { display: flex; flex-direction: column; text-align: right; font-size: 14px; }
+.usuario span { font-size: 12px; color: var(--suave); }
