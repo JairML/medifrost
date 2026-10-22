@@ -119,3 +119,19 @@ ul.mensaje { padding-left: 28px; }
 .usuario { display: flex; align-items: center; gap: 12px; }
 .usuario > div { display: flex; flex-direction: column; text-align: right; font-size: 14px; }
 .usuario span { font-size: 12px; color: var(--suave); }
+
+/* ---------- HU12 / HU13 / HU04 · Alertas (T21, T24) ---------- */
+:root { --energia: #e65100; }
+@media (prefers-color-scheme: dark) { :root { --energia: #ffab66; } }
+.aviso-alerta { border-left: 4px solid var(--alerta); background: var(--error-fondo); border-radius: 8px; padding: 10px 12px; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+.aviso-alerta.sin-senal { border-left-color: var(--gris); background: var(--neutro-fondo); }
+.aviso-alerta.energia { border-left-color: var(--energia); background: var(--aviso-fondo); }
+.aviso-alerta.atendida { opacity: .9; }
+.aviso-alerta p { margin: 0; }
+.aviso-titulo { font-weight: 700; font-size: 14px; }
+.aviso-detalle { font-size: 13px; color: var(--texto); }
+.aviso-error { color: var(--error-texto); }
+.aviso-alerta button { align-self: flex-start; margin-top: 4px; padding: 6px 12px; font-size: 13px; background: var(--alerta); border-color: var(--alerta); color: #fff; }
+.aviso-alerta button:disabled { opacity: .7; cursor: wait; }
+.casilla { flex-direction: row; align-items: center; gap: 6px; font-size: 14px; color: var(--texto); }
+.casilla input { width: 16px; height: 16px; }

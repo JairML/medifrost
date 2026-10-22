@@ -75,4 +75,7 @@ export const api = {
   crearSensor: (datos) => pedir('/sensores', { metodo: 'POST', cuerpo: datos }),
   actualizarSensor: (id, datos) => pedir(`/sensores/${id}`, { metodo: 'PUT', cuerpo: datos }),
   obtenerEstado: () => pedir('/estado'), // HU06
+  // HU12 / HU13 / HU04
+  listarAlertas: ({ abiertas = false, limite = 100 } = {}) => pedir(`/alertas?limite=${limite}${abiertas ? '&abiertas=1' : ''}`),
+  atenderAlerta: (id) => pedir(`/alertas/${id}/atender`, { metodo: 'POST' }),
 };

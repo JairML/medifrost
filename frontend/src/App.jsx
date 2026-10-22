@@ -4,6 +4,7 @@ import Login from './paginas/Login.jsx';
 import Refrigeradoras from './paginas/Refrigeradoras.jsx';
 import Configuracion from './paginas/Configuracion.jsx';
 import Estado from './paginas/Estado.jsx';
+import Alertas from './paginas/Alertas.jsx';
 
 // HU20 (T30 – Mateo Andrade): el rol ya no se elige en una lista, viene de la sesión iniciada.
 const ETIQUETA_ROL = {
@@ -60,6 +61,9 @@ export default function App() {
         <button className={pagina === 'estado' ? 'activa' : ''} onClick={() => setPagina('estado')}>
           Estado actual
         </button>
+        <button className={pagina === 'alertas' ? 'activa' : ''} onClick={() => setPagina('alertas')}>
+          Alertas
+        </button>
         <button className={pagina === 'refrigeradoras' ? 'activa' : ''} onClick={() => setPagina('refrigeradoras')}>
           Refrigeradoras y sensores
         </button>
@@ -70,6 +74,7 @@ export default function App() {
 
       <main>
         {pagina === 'estado' && <Estado />}
+        {pagina === 'alertas' && <Alertas />}
         {pagina === 'refrigeradoras' && <Refrigeradoras rol={rol} />}
         {pagina === 'configuracion' && <Configuracion rol={rol} />}
       </main>
