@@ -42,3 +42,11 @@ curl -X POST localhost:3000/api/demo/normal   -H "Content-Type: application/json
 curl -X POST localhost:3000/api/demo/pausar   -H "Content-Type: application/json" -d "{\"dispositivo_id\":\"MF-NODO-01\"}"
 curl -X POST localhost:3000/api/demo/evento   -H "Content-Type: application/json" -d "{\"dispositivo_id\":\"MF-NODO-01\",\"tipo\":\"corte_energia\",\"bateria_pct\":70}"
 ```
+
+## Inicio de sesión (Sprint 2 · HU20)
+
+- `POST /api/auth/login` `{ correo, contrasena }` → `{ token, usuario, expira_en }`. Las demás rutas piden `Authorization: Bearer <token>`.
+- Las contraseñas se guardan como hash **bcrypt**. La sesión es un **JWT** que dura 8 h (`JWT_EXPIRA`) y se firma con `JWT_SECRET`, que es obligatorio con Supabase.
+- Tras **5 intentos fallidos**, la cuenta se bloquea **5 minutos** (responde 423).
+- Para crear usuarios reales: `npm run crear-usuario -- --correo dt@botica.pe --nombre "Q.F. Ana Pérez" --rol directora_tecnica`. La contraseña se pide por teclado.
+- En `npm run demo` existen `admin@medifrost.demo`, `dt@medifrost.demo` y `tecnico@medifrost.demo`, con la contraseña `MediFrost2026`.
