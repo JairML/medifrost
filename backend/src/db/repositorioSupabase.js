@@ -8,6 +8,7 @@ const MENSAJES_UNICIDAD = {
   sensor_dispositivo_id_key: 'Ese dispositivo ya está registrado.',
   sensor_refrigeradora_id_key: 'Esa refrigeradora ya tiene un sensor vinculado.',
   alerta_abierta_unica: 'Ya hay una alerta abierta de ese tipo para la refrigeradora.',
+  usuario_correo_key: 'Ya existe un usuario con ese correo.',
 };
 
 const ESTADOS_ABIERTOS = ['pendiente', 'activa', 'atendida'];
@@ -92,6 +93,17 @@ function crearRepositorioSupabase({ url, claveServicio }) {
       const { error } = await db.from('evento_nodo').update({ procesado_en: fecha }).eq('id', id);
       if (error) throw traducirError(error);
     },
+
+    // ---- Usuarios (HU20): la tabla solo la lee el backend (RLS sin políticas) ----
+    buscarUsuarioPorCorreo: async (correo) => {
+      const { data, error } = await db.from('usuario').select('*').eq('correo', String(correo).toLowerCase()).maybeSingle();
+      if (error) throw traducirError(error);
+      return data;
+    },
+    crearUsuario: ({ correo, nombre, rol, hash_contrasena }) => ejecutar(
+      db.from('usuario').insert({ correo: String(correo).trim().toLowerCase(), nombre, rol, hash_contrasena }).select().single(),
+    ),
+    actualizarUsuario: (id, cambios) => ejecutar(db.from('usuario').update(cambios).eq('id', id).select().single()),
   };
 }
 

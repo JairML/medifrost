@@ -12,6 +12,7 @@ function crearRepositorioMemoria() {
   const alertas = new Map(); // HU12, HU13, HU04
   const eventos = []; // HU04: eventos del nodo
   let siguienteEvento = 1;
+  const usuarios = new Map(); // HU20
   const ABIERTAS = ['pendiente', 'activa', 'atendida'];
 
   const copia = (obj) => (obj ? { ...obj } : null);
@@ -156,6 +157,31 @@ function crearRepositorioMemoria() {
     async marcarEventoProcesado(id, fecha = new Date().toISOString()) {
       const e = eventos.find((x) => x.id === id);
       if (e) e.procesado_en = fecha;
+    },
+
+    // ---- Usuarios (HU20) ----
+    async buscarUsuarioPorCorreo(correo) {
+      const c = String(correo).toLowerCase();
+      return copia([...usuarios.values()].find((u) => u.correo === c));
+    },
+
+    async crearUsuario({ correo, nombre, rol, hash_contrasena }) {
+      const c = String(correo).trim().toLowerCase();
+      if ([...usuarios.values()].some((u) => u.correo === c)) throw new ErrorConflicto('Ya existe un usuario con ese correo.');
+      const nuevo = {
+        id: randomUUID(), correo: c, nombre, rol, hash_contrasena,
+        intentos_fallidos: 0, bloqueado_hasta: null, activo: true, creado_en: new Date().toISOString(),
+      };
+      usuarios.set(nuevo.id, nuevo);
+      return copia(nuevo);
+    },
+
+    async actualizarUsuario(id, cambios) {
+      const actual = usuarios.get(id);
+      if (!actual) throw new ErrorNoEncontrado('El usuario no existe.');
+      const actualizado = { ...actual, ...cambios };
+      usuarios.set(id, actualizado);
+      return copia(actualizado);
     },
   };
 }

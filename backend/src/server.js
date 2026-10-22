@@ -1,11 +1,13 @@
-// Punto de entrada del backend. Tarea T07 – Jair Menéndez. Sprint 2: alertas (T19, T23).
+// Punto de entrada del backend. Tarea T07 – Jair Menéndez. Sprint 2: alertas (T19, T23) y login (T29).
 require('dotenv').config();
+const { randomBytes } = require('node:crypto');
 const { crearApp } = require('./app');
 const { crearRepositorioSupabase } = require('./db/repositorioSupabase');
 const { crearRepositorioMemoria } = require('./db/repositorioMemoria');
 const { iniciarSimulador } = require('./demo/simuladorLecturas');
 const { crearNotificador } = require('./alertas/correo');
 const { crearVigilante } = require('./alertas/vigilante');
+const { crearUsuariosDemo, CONTRASENA_DEMO } = require('./demo/usuariosDemo');
 
 // «npm run demo» pasa --demo (funciona igual en Windows, Mac y Linux)
 const usarMemoria = process.argv.includes('--demo') || process.env.USE_MEMORY_DB === 'true';
@@ -32,10 +34,29 @@ const alertasActivas = usarMemoria ? process.env.ALERTAS_ACTIVAS !== 'false' : p
 if (alertasActivas) vigilante.iniciar();
 else console.log('Alertas: desactivadas en esta computadora (ALERTAS_ACTIVAS=false). Las revisa otra instancia del backend.');
 
+// HU20: secreto para firmar las sesiones. Con Supabase es obligatorio; en demo se genera uno al azar.
+let jwtSecreto = process.env.JWT_SECRET;
+if (!jwtSecreto || jwtSecreto.length < 32) {
+  if (!usarMemoria) {
+    console.error('Falta JWT_SECRET en backend/.env (mínimo 32 caracteres). Genera uno con:');
+    console.error('  node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+    process.exit(1);
+  }
+  jwtSecreto = randomBytes(32).toString('hex');
+}
+
 const app = crearApp(repo, {
   origenPermitido: process.env.FRONTEND_ORIGIN || '*',
   demo: usarMemoria ? { simulador, vigilante } : null,
+  jwtSecreto,
+  jwtExpira: process.env.JWT_EXPIRA || '8h',
 });
+
+if (usarMemoria) {
+  crearUsuariosDemo(repo).then((correos) => {
+    console.log(`Usuarios de demo (contraseña «${CONTRASENA_DEMO}»): ${correos.join(', ')}`);
+  });
+}
 const puerto = Number(process.env.PORT) || 3000;
 
 app.listen(puerto, () => {
