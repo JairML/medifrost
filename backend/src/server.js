@@ -53,9 +53,11 @@ const app = crearApp(repo, {
 });
 
 if (usarMemoria) {
-  crearUsuariosDemo(repo).then((correos) => {
-    console.log(`Usuarios de demo (contraseña «${CONTRASENA_DEMO}»): ${correos.join(', ')}`);
-  });
+  crearUsuariosDemo(repo)
+    .then((correos) => {
+      console.log(`Usuarios de demo (contraseña «${CONTRASENA_DEMO}»): ${correos.join(', ')}`);
+    })
+    .catch((err) => console.error('No se pudieron crear los usuarios de demo:', err.message));
 }
 const puerto = Number(process.env.PORT) || 3000;
 

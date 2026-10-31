@@ -31,7 +31,7 @@ export default function Refrigeradoras({ rol }) {
       setCargando(false);
     }
   }
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => { void cargar(); }, []);
 
   async function crearRefrigeradora(e) {
     e.preventDefault();
@@ -39,7 +39,7 @@ export default function Refrigeradoras({ rol }) {
       await api.crearRefrigeradora(nueva);
       setNueva({ nombre: '', ubicacion: '' });
       setMensaje({ tipo: 'ok', texto: 'Refrigeradora registrada.' });
-      cargar();
+      await cargar();
     } catch (err) {
       setMensaje({ tipo: 'error', texto: err.message });
     }
@@ -49,7 +49,7 @@ export default function Refrigeradoras({ rol }) {
     try {
       await api.actualizarRefrigeradora(ref.id, { activa: !ref.activa });
       setMensaje({ tipo: 'ok', texto: ref.activa ? 'Refrigeradora desactivada.' : 'Refrigeradora activada.' });
-      cargar();
+      await cargar();
     } catch (err) {
       setMensaje({ tipo: 'error', texto: err.message });
     }
@@ -74,7 +74,7 @@ export default function Refrigeradoras({ rol }) {
       else await api.crearSensor(datos);
       setMensaje({ tipo: 'ok', texto: `Sensor guardado en «${sensorPara.nombre}».` });
       setSensorPara(null);
-      cargar();
+      await cargar();
     } catch (err) {
       setMensaje({ tipo: 'error', texto: err.message });
     }
