@@ -1,0 +1,26 @@
+# Análisis de SonarQube Cloud en cada PR y en cada push a develop/main (DoD: Quality Gate)
+name: SonarQube Cloud
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarqube:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: backend/package-lock.json }
+      - name: Pruebas del backend con cobertura
+        working-directory: backend
+        run: |
+          npm ci
+          npm test
+      - name: Análisis de SonarQube Cloud
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
