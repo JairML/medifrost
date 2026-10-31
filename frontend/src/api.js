@@ -31,7 +31,13 @@ export function alExpirarSesion(fn) { alExpirar = fn; }
 
 export function cerrarSesion() { guardarSesion(null); }
 
+// Seguridad (SonarQube): solo se piden rutas internas de la API con caracteres permitidos
+// y los identificadores se codifican, para que un dato no pueda cambiar el destino de la petición.
+const RUTA_VALIDA = /^\/[A-Za-z0-9/_\-]+(\?[A-Za-z0-9=&_\-]*)?$/;
+const seg = (valor) => encodeURIComponent(String(valor));
+
 async function pedir(ruta, { metodo = 'GET', cuerpo, conSesion = true } = {}) {
+  if (!RUTA_VALIDA.test(ruta) || ruta.includes('..')) throw new Error('Ruta de la API no válida.');
   const headers = { 'Content-Type': 'application/json' };
   if (conSesion && sesion) headers.Authorization = `Bearer ${sesion.token}`;
   let res;
@@ -69,13 +75,13 @@ export const api = {
   salud: () => pedir('/salud', { conSesion: false }),
   listarRefrigeradoras: () => pedir('/refrigeradoras'),
   crearRefrigeradora: (datos) => pedir('/refrigeradoras', { metodo: 'POST', cuerpo: datos }),
-  actualizarRefrigeradora: (id, datos) => pedir(`/refrigeradoras/${id}`, { metodo: 'PUT', cuerpo: datos }),
-  obtenerConfiguracion: (id) => pedir(`/refrigeradoras/${id}/configuracion`),
-  guardarConfiguracion: (id, datos) => pedir(`/refrigeradoras/${id}/configuracion`, { metodo: 'PUT', cuerpo: datos }),
+  actualizarRefrigeradora: (id, datos) => pedir(`/refrigeradoras/${seg(id)}`, { metodo: 'PUT', cuerpo: datos }),
+  obtenerConfiguracion: (id) => pedir(`/refrigeradoras/${seg(id)}/configuracion`),
+  guardarConfiguracion: (id, datos) => pedir(`/refrigeradoras/${seg(id)}/configuracion`, { metodo: 'PUT', cuerpo: datos }),
   crearSensor: (datos) => pedir('/sensores', { metodo: 'POST', cuerpo: datos }),
-  actualizarSensor: (id, datos) => pedir(`/sensores/${id}`, { metodo: 'PUT', cuerpo: datos }),
+  actualizarSensor: (id, datos) => pedir(`/sensores/${seg(id)}`, { metodo: 'PUT', cuerpo: datos }),
   obtenerEstado: () => pedir('/estado'), // HU06
   // HU12 / HU13 / HU04
-  listarAlertas: ({ abiertas = false, limite = 100 } = {}) => pedir(`/alertas?limite=${limite}${abiertas ? '&abiertas=1' : ''}`),
-  atenderAlerta: (id) => pedir(`/alertas/${id}/atender`, { metodo: 'POST' }),
+  listarAlertas: ({ abiertas = false, limite = 100 } = {}) => pedir(`/alertas?limite=${Number.parseInt(limite, 10) || 100}${abiertas ? '&abiertas=1' : ''}`),
+  atenderAlerta: (id) => pedir(`/alertas/${seg(id)}/atender`, { metodo: 'POST' }),
 };

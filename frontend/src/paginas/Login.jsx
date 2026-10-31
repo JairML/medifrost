@@ -50,7 +50,7 @@ export default function Login({ onIngreso, aviso }) {
 
         <label htmlFor="login-correo">Correo
           <input id="login-correo" type="email" autoComplete="username" value={correo}
-            onChange={(e) => setCorreo(e.target.value)} placeholder="nombre@botica.pe" autoFocus />
+            onChange={(e) => setCorreo(e.target.value)} placeholder="nombre@botica.pe" />
         </label>
         <label htmlFor="login-contrasena">Contraseña
           <input id="login-contrasena" type="password" autoComplete="current-password" value={contrasena}
