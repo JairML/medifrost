@@ -1,0 +1,54 @@
+MediFrost – Armado y carga del nodo ESP32 + DS18B20 (HU01 · MF-6 y HU02 · MF-7)
+=================================================================================
+Responsable: Domenico Chang (T02, T06) · Ensamblado T01: Ian Flores · Pruebas T03, T04, T08: Kheyla Cóndor
+
+1) CONEXIÓN (ver docs/MediFrost_conexion_ESP32_DS18B20.png)
+  Rojo      (VDD)  → pin 3V3 del ESP32   (NO al 5V/VIN)
+  Negro     (GND)  → pin GND
+  Amarillo  (DATA) → pin D4 (GPIO 4)
+  Resistencia 4,7 kΩ entre la fila del amarillo (DATA) y la fila del rojo (3V3).
+  * Si el sensor viene en un módulo de 3 pines con resistencia incluida: no pongas la resistencia.
+
+2) ARDUINO IDE (una sola vez)
+  - Gestor de placas: «esp32 by Espressif Systems».
+  - Bibliotecas: «OneWire» (Paul Stoffregen) y «DallasTemperature» (Miles Burton).
+  - WiFi, HTTPClient y WiFiClientSecure ya vienen con la placa esp32 (no se instalan).
+  - Si no aparece el puerto COM: driver CP210x o CH340.
+
+3) CONFIGURAR TUS DATOS (HU02)
+  a. En firmware/arduino/medifrost_nodo/ copia config.example.h y renómbralo config.h
+  b. Completa:
+       WIFI_SSID / WIFI_PASSWORD   → tu WiFi (2,4 GHz; el ESP32 no conecta a 5 GHz)
+       SUPABASE_URL                → https://nytbzpailvmxyvacmgkw.supabase.co
+       SUPABASE_KEY                → la clave PÚBLICA: Supabase → Project Settings → API Keys →
+                                     «Publishable key» (sb_publishable_…) o, en Legacy, «anon».
+       DISPOSITIVO_ID              → MF-NODO-01 (el mismo del sensor registrado en la web)
+  ⚠️ NUNCA pongas la secret / service_role en el ESP32. config.h NO se sube (está en .gitignore).
+
+4) CARGAR EL CÓDIGO
+  - Abre firmware/arduino/medifrost_nodo/medifrost_nodo.ino (lectura.h y config.h salen como pestañas).
+  - Placa «ESP32 Dev Module», tu puerto COM → Subir (si se queda en «Connecting…», mantén BOOT).
+  - Monitor serie a 115200. Debe salir algo así cada 60 s:
+      WiFi: conectado, IP 192.168.1.23
+      {"dispositivo_id":"MF-NODO-01","temperatura":4.3,"estado":"ok","medido_en":"2026-10-12T14:05:00Z"}
+      Envío OK (HTTP 201) en el intento 1
+
+5) VERIFICAR EN SUPABASE
+  Supabase → Table Editor → tabla «lectura»: aparece una fila nueva cada minuto. 📸
+
+6) PRUEBAS (evidencia HU01 y HU02)
+  - Sonda en la mano → la lectura sube.  Sonda en agua con hielo → cerca de 0–2 °C (T04).
+  - Desconectar el cable amarillo → "estado":"error_sensor" y "temperatura":null (HU01-2).
+  - Apagar el WiFi del router → «Envío fallido… intento 1 de 3», y al volver el WiFi el
+    siguiente envío sale OK sin reiniciar el ESP32 (HU02-2).  📸 de cada caso.
+
+SIN HARDWARE: simulador Wokwi
+  wokwi.com → ESP32 → reemplaza sketch.ino y diagram.json con los de firmware/wokwi/,
+  agrega las pestañas lectura.h y config.h (copia de wokwi/config.example.h, ya trae Wokwi-GUEST),
+  libraries.txt con OneWire y DallasTemperature → ▶. Las lecturas llegan a Supabase igual.
+
+PROBLEMAS FRECUENTES
+  - Siempre -127 / error_sensor: falta la resistencia de 4,7 kΩ o el amarillo no está en D4.
+  - «WiFi: sin conexión»: red de 5 GHz, clave mal escrita o WiFi con portal (universidad).
+  - Supabase responde 401: la clave está mal copiada. 403 / 42501: falta la política RLS (correr schema.sql).
+  - Supabase responde 400 con «medido_en»: el reloj no sincronizó; el siguiente envío lo corrige solo.
