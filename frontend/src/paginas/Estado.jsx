@@ -3,6 +3,7 @@
 // Criterios: última temperatura + hora + color (verde/rojo/gris) · se actualiza sola cada ≤ 60 s.
 // Sprint 2 – Tareas T21 y T24 (Mateo Andrade): aviso de alerta en la tarjeta, botón
 // «Marcar como atendida» (HU12-2), estado «sin señal» con su alerta (HU13) y energía del nodo (HU04).
+// Sprint 3 – HU23: tendencia con predicción de salida del rango, aviso preventivo y salud del sensor.
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { TIPOS, detalleAlerta } from '../alertas.js';
@@ -71,12 +72,43 @@ function textoEnergia(lectura) {
   return `🔌 Energía externa${lectura.bateria_pct !== null && lectura.bateria_pct !== undefined ? ` · batería ${lectura.bateria_pct} %` : ''}`;
 }
 
+// HU23: «↗ +0,3 °C/10 min · saldría de 8 °C en ~25 min»
+const FLECHAS = { subiendo: '↗', bajando: '↘', estable: '→' };
+function textoTendencia(p, r) {
+  if (!p) return null;
+  if (!p.disponible) return 'Calculando… (faltan lecturas recientes)';
+  const signo = p.pendiente_c_10min > 0 ? '+' : '';
+  let texto = `${FLECHAS[p.tendencia]} ${signo}${p.pendiente_c_10min.toFixed(1)} °C cada 10 min`;
+  if (p.minutos_para_salir === 0) texto += ' · fuera del rango';
+  else if (!p.confiable) texto += ' · sin tendencia clara';
+  else if (p.minutos_para_salir !== null) {
+    texto += ` · saldría de ${p.limite === 'max' ? r.temp_max : r.temp_min} °C en ~${p.minutos_para_salir} min`;
+  } else if (p.tendencia === 'estable') texto += ' · estable';
+  return texto;
+}
+
+const RIESGOS = {
+  ok: { icono: '✔', texto: 'Bien' },
+  atencion: { icono: '⚠', texto: 'Atención' },
+  falla_probable: { icono: '✖', texto: 'Falla probable' },
+};
+function textoSalud(s) {
+  if (!s) return null;
+  if (!s.disponible) return 'Sin datos suficientes';
+  const r = RIESGOS[s.riesgo] || RIESGOS.ok;
+  const detalle = s.motivos.length ? s.motivos.join(' · ') : `${s.errores_pct} % errores · ${s.perdidas_pct} % perdidas (${s.ventana_h} h)`;
+  return `${r.icono} ${r.texto} – ${detalle}`;
+}
+
 function TarjetaEstado({ item, onAtender }) {
   const e = ESTADOS[item.estado] || ESTADOS.sin_senal;
   const { refrigeradora: r, lectura, sensor } = item;
   const temperatura = lectura && lectura.temperatura !== null ? lectura.temperatura.toFixed(1) : '—';
   const alertas = item.alertas || [];
   const energia = textoEnergia(lectura);
+  const p = item.prediccion;
+  const tendencia = textoTendencia(p, r);
+  const salud = textoSalud(item.salud_sensor);
 
   return (
     <article className={`estado-tarjeta ${e.clase}`} aria-label={`${r.nombre}: ${e.etiqueta}`}>
@@ -97,6 +129,16 @@ function TarjetaEstado({ item, onAtender }) {
 
       {alertas.map((a) => <AvisoAlerta key={a.id} alerta={a} onAtender={onAtender} />)}
 
+      {p?.preventiva && (
+        <div className="aviso-alerta preventiva" role="status">
+          <p className="aviso-titulo"><span aria-hidden="true">⏱</span> Aviso preventivo</p>
+          <p className="aviso-detalle">
+            A este ritmo superará {p.limite === 'max' ? `el máximo (${r.temp_max} °C)` : `el mínimo (${r.temp_min} °C)`} en ~{p.minutos_para_salir} min.
+            Revise la puerta y el equipo antes de que se produzca la excursión.
+          </p>
+        </div>
+      )}
+
       <dl className="estado-datos">
         <div><dt>Rango</dt><dd>{r.temp_min} – {r.temp_max} °C</dd></div>
         <div>
@@ -105,6 +147,8 @@ function TarjetaEstado({ item, onAtender }) {
         </div>
         <div><dt>Sensor</dt><dd>{sensor ? `${sensor.codigo} · ${sensor.dispositivo_id}` : 'No vinculado'}</dd></div>
         {energia && <div><dt>Energía del nodo</dt><dd>{energia}</dd></div>}
+        {tendencia && <div><dt>Tendencia</dt><dd>{tendencia}</dd></div>}
+        {salud && <div><dt>Salud del sensor</dt><dd className={`salud ${item.salud_sensor?.riesgo || ''}`}>{salud}</dd></div>}
       </dl>
     </article>
   );

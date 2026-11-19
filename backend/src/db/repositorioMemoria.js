@@ -101,6 +101,15 @@ function crearRepositorioMemoria() {
       return copia(ultima);
     },
 
+    // HU23: lecturas de un dispositivo desde una fecha (para la tendencia y la salud del sensor)
+    async lecturasDesde(dispositivoId, desdeIso, limite = 1000) {
+      return lecturas
+        .filter((l) => l.dispositivo_id === dispositivoId && l.medido_en >= desdeIso)
+        .sort((a, b) => (a.medido_en < b.medido_en ? -1 : 1))
+        .slice(-limite)
+        .map(copia);
+    },
+
     // ---- Alertas (HU12, HU13, HU04) ----
     async crearAlerta(datos) {
       const abierta = [...alertas.values()].find((a) => a.refrigeradora_id === datos.refrigeradora_id && a.tipo === datos.tipo && ABIERTAS.includes(a.estado));
