@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: backend } }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm, cache-dependency-path: backend/package-lock.json }
       - run: npm ci
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: frontend } }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
       - run: npm ci
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: firmware } }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Las pruebas del firmware corren cuando ya existe firmware/platformio.ini (paquete 7, HU01)
       - uses: actions/setup-python@v5
         if: hashFiles('firmware/platformio.ini') != ''
@@ -58,7 +58,7 @@ jobs:
       matrix:
         proyecto: [backend, frontend]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm, cache-dependency-path: '${{ matrix.proyecto }}/package-lock.json' }
       - name: Instalar sin ejecutar scripts de terceros
@@ -75,7 +75,7 @@ jobs:
     name: Seguridad · secretos (Gitleaks)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }   # revisa TODO el historial, no solo el último commit
       - name: Instalar Gitleaks 8.28.0
         run: |
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     container: { image: semgrep/semgrep }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Bloquea si hay hallazgos de severidad ERROR
         run: semgrep scan --config p/javascript --config p/nodejs --config p/react --config p/secrets --severity ERROR --error --metrics=off backend/src frontend/src
       - name: Reporte completo (todas las severidades)
@@ -103,7 +103,7 @@ jobs:
     name: Seguridad · SBOM (Syft)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Inventario de componentes del backend (SPDX)
         uses: anchore/sbom-action@v0
         with: { path: ./backend, format: spdx-json, artifact-name: sbom-backend.spdx.json }
