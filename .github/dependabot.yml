@@ -1,0 +1,22 @@
+# HU24 (DevSecOps): Dependabot revisa cada semana si hay versiones nuevas o vulnerables
+# y abre un PR hacia develop (que pasa por el mismo CI y la misma revisión que cualquier PR).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /backend
+    target-branch: develop
+    schedule: { interval: weekly, day: monday, time: "08:00", timezone: America/Lima }
+    open-pull-requests-limit: 3
+    groups:
+      menores: { update-types: [minor, patch] }
+  - package-ecosystem: npm
+    directory: /frontend
+    target-branch: develop
+    schedule: { interval: weekly, day: monday, time: "08:00", timezone: America/Lima }
+    open-pull-requests-limit: 3
+    groups:
+      menores: { update-types: [minor, patch] }
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule: { interval: monthly }
