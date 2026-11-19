@@ -1,6 +1,9 @@
 # Análisis de SonarQube Cloud en cada PR y en cada push a develop/main (DoD: Quality Gate)
 name: SonarQube Cloud
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [develop, main]
@@ -21,6 +24,6 @@ jobs:
           npm ci
           npm test
       - name: Análisis de SonarQube Cloud
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6  # v5 ya no tiene soporte (aviso de seguridad de GitHub)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
