@@ -1,0 +1,52 @@
+# Respaldo semanal de la base de datos de Supabase (MediFrost)
+# - Corre cada domingo a las 03:00 (hora de Lima) y también a mano (Run workflow).
+# - El volcado se CIFRA con GPG antes de guardarlo, porque el repositorio es público
+#   y la base tiene correos y hashes de contraseñas.
+# - Se guarda como artefacto de la ejecución durante 30 días.
+# Secretos necesarios (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL  → cadena de conexión "Session pooler" de Supabase (IPv4)
+#   RESPALDO_CLAVE   → frase para cifrar/descifrar el respaldo (no compartir en el grupo)
+name: Respaldo de la base de datos
+
+on:
+  schedule:
+    - cron: "0 8 * * 0"   # domingo 08:00 UTC = 03:00 en Lima
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Instalar el cliente de PostgreSQL 17
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Volcar la base y cifrar el archivo
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: |
+          set -euo pipefail
+          FECHA=$(date -u +%Y-%m-%d)
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
+            --schema=public --no-owner --no-privileges --format=custom \
+            --file=medifrost_$FECHA.dump
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$RESPALDO_CLAVE" \
+            --symmetric --cipher-algo AES256 \
+            --output medifrost_$FECHA.dump.gpg medifrost_$FECHA.dump
+          rm medifrost_$FECHA.dump
+          ls -lh medifrost_$FECHA.dump.gpg
+
+      - name: Guardar el respaldo cifrado (30 días)
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-supabase-${{ github.run_number }}
+          path: medifrost_*.dump.gpg
+          retention-days: 30
