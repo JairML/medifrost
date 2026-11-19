@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Las pruebas del firmware corren cuando ya existe firmware/platformio.ini (paquete 7, HU01)
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: hashFiles('firmware/platformio.ini') != ''
         with: { python-version: '3.12' }
       - run: pip install platformio
