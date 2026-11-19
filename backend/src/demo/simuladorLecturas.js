@@ -9,12 +9,15 @@
 //   pausar(dispositivo)        → deja de enviar lecturas (para probar «sin señal», HU13)
 //   reanudar(dispositivo)
 //   energia(dispositivo, { alimentacion: 'bateria', bateria_pct: 60 })  → HU04
+// Sprint 3 (HU23):
+//   rampa(dispositivo, 0.15)   → la temperatura sube 0,15 °C por minuto (para ver la predicción)
 
 function iniciarSimulador(repo, { intervaloMs = 10000 } = {}) {
   const temperaturas = new Map(); // dispositivo_id → última temperatura simulada
   const fijadas = new Map(); // dispositivo_id → temperatura forzada (o null = error de sensor)
   const pausados = new Set();
   const energias = new Map(); // dispositivo_id → { alimentacion, bateria_pct }
+  const rampas = new Map(); // dispositivo_id → °C por minuto (HU23)
 
   async function tick() {
     const sensores = await repo.listarSensores();
@@ -25,10 +28,17 @@ function iniciarSimulador(repo, { intervaloMs = 10000 } = {}) {
       if (fijadas.has(s.dispositivo_id)) {
         temperatura = fijadas.get(s.dispositivo_id);
         if (temperatura === null) estado = 'error_sensor';
+      } else if (rampas.has(s.dispositivo_id)) {
+        // HU23: subida (o bajada) constante para que el modelo prediga cuándo se sale del rango
+        const anterior = temperaturas.get(s.dispositivo_id) ?? 4.5;
+        const siguiente = anterior + rampas.get(s.dispositivo_id) * (intervaloMs / 60000);
+        temperaturas.set(s.dispositivo_id, siguiente);
+        temperatura = Math.round(siguiente * 100) / 100;
       } else {
         const anterior = temperaturas.get(s.dispositivo_id) ?? 4.5;
-        // paseo aleatorio suave entre 2,5 y 7,5 °C
-        const siguiente = Math.min(7.5, Math.max(2.5, anterior + (Math.random() - 0.5) * 0.6));
+        // oscila alrededor de 4,5 °C como una refrigeradora real (vuelve al centro + ruido pequeño),
+        // así la tendencia del modelo de predicción (HU23) sale «estable» en modo demo
+        const siguiente = Math.min(7.5, Math.max(2.5, anterior + 0.2 * (4.5 - anterior) + (Math.random() - 0.5) * 0.3));
         temperaturas.set(s.dispositivo_id, siguiente);
         temperatura = Math.round(siguiente * 10) / 10;
       }
@@ -51,13 +61,15 @@ function iniciarSimulador(repo, { intervaloMs = 10000 } = {}) {
     detener: () => clearInterval(id),
     tick,
     fijar(dispositivo, temperatura) { fijadas.set(dispositivo, temperatura === null ? null : Number(temperatura)); },
-    soltar(dispositivo) { fijadas.delete(dispositivo); },
+    soltar(dispositivo) { fijadas.delete(dispositivo); rampas.delete(dispositivo); },
+    rampa(dispositivo, gradosPorMinuto) { fijadas.delete(dispositivo); rampas.set(dispositivo, Number(gradosPorMinuto)); },
     pausar(dispositivo) { pausados.add(dispositivo); },
     reanudar(dispositivo) { pausados.delete(dispositivo); },
     energia(dispositivo, datos) { energias.set(dispositivo, { ...(energias.get(dispositivo) || { alimentacion: 'externa', bateria_pct: 100 }), ...datos }); },
     estado(dispositivo) {
       return {
         fijada: fijadas.has(dispositivo) ? fijadas.get(dispositivo) : undefined,
+        rampa_c_min: rampas.has(dispositivo) ? rampas.get(dispositivo) : undefined,
         pausado: pausados.has(dispositivo),
         energia: energias.get(dispositivo) || { alimentacion: 'externa', bateria_pct: 100 },
       };

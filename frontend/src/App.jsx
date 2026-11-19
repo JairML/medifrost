@@ -80,7 +80,7 @@ export default function App() {
       </main>
 
       <footer className="pie">
-        MediFrost · Proyecto Integrador – Calidad de Software · Universidad ESAN · Sprint 2
+        MediFrost · Proyecto Integrador – Calidad de Software · Universidad ESAN · v1.0
       </footer>
     </div>
   );

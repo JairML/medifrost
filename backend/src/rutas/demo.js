@@ -5,6 +5,7 @@
 //   POST /api/demo/pausar        { dispositivo_id }               → el nodo deja de enviar (HU13)
 //   POST /api/demo/reanudar      { dispositivo_id }
 //   POST /api/demo/evento        { dispositivo_id, tipo, bateria_pct }  → corte_energia | energia_restaurada | bateria_baja (HU04)
+//   POST /api/demo/rampa         { dispositivo_id, grados_por_min } → sube o baja de forma constante (HU23)
 //   GET  /api/demo/:dispositivo_id → cómo está simulado ese nodo
 const { Router } = require('express');
 
@@ -21,6 +22,15 @@ function rutasDemo({ repo, simulador, vigilante }) {
     const t = req.body?.temperatura;
     if (t !== null && !Number.isFinite(Number(t))) return res.status(400).json({ errores: ['temperatura debe ser un número o null.'] });
     simulador.fijar(dispositivo(req), t === null ? null : Number(t));
+    await revisar();
+    res.json({ ok: true, ...simulador.estado(dispositivo(req)) });
+  });
+
+  // HU23: para mostrar la predicción («saldría del rango en ~N min») sin hardware
+  r.post('/rampa', async (req, res) => {
+    const g = Number(req.body?.grados_por_min);
+    if (!Number.isFinite(g) || Math.abs(g) > 2) return res.status(400).json({ errores: ['grados_por_min debe ser un número entre -2 y 2.'] });
+    simulador.rampa(dispositivo(req), g);
     await revisar();
     res.json({ ok: true, ...simulador.estado(dispositivo(req)) });
   });

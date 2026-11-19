@@ -67,6 +67,18 @@ function crearRepositorioSupabase({ url, claveServicio }) {
       return data;
     },
 
+    // HU23: lecturas desde una fecha, de la más antigua a la más nueva (máx. 1000 = límite de Supabase)
+    lecturasDesde: async (dispositivoId, desdeIso, limite = 1000) => {
+      const { data, error } = await db.from('lectura')
+        .select('temperatura, estado, medido_en')
+        .eq('dispositivo_id', dispositivoId)
+        .gte('medido_en', desdeIso)
+        .order('medido_en', { ascending: true })
+        .limit(limite);
+      if (error) throw traducirError(error);
+      return data || [];
+    },
+
     // ---- Alertas (HU12, HU13, HU04): solo el backend puede leerlas y escribirlas (RLS) ----
     crearAlerta: (datos) => ejecutar(db.from('alerta').insert(datos).select().single()),
     actualizarAlerta: (id, cambios) => ejecutar(db.from('alerta').update(cambios).eq('id', id).select().single()),

@@ -127,6 +127,9 @@ ul.mensaje { padding-left: 28px; }
 .aviso-alerta.sin-senal { border-left-color: var(--gris); background: var(--neutro-fondo); }
 .aviso-alerta.energia { border-left-color: var(--energia); background: var(--aviso-fondo); }
 .aviso-alerta.atendida { opacity: .9; }
+.aviso-alerta.preventiva { border-left-color: var(--energia); background: var(--aviso-fondo); }
+.salud.atencion { color: var(--energia); }
+.salud.falla_probable { color: var(--alerta); font-weight: 600; }
 .aviso-alerta p { margin: 0; }
 .aviso-titulo { font-weight: 700; font-size: 14px; }
 .aviso-detalle { font-size: 13px; color: var(--texto); }
