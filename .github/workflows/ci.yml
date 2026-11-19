@@ -95,7 +95,7 @@ jobs:
       - name: Reporte completo (todas las severidades)
         if: always()
         run: semgrep scan --config p/javascript --config p/nodejs --config p/react --config p/secrets --metrics=off --json --output semgrep.json backend/src frontend/src || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with: { name: semgrep-reporte, path: semgrep.json, retention-days: 30 }
 
