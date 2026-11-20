@@ -2,9 +2,11 @@
 // GET /api/estado        → todas las refrigeradoras activas con su última lectura y estado
 // GET /api/estado/:id    → una refrigeradora
 // Sprint 2: cada refrigeradora trae también sus alertas abiertas y el estado de la energía del nodo.
+// Sprint 3 (HU23): cada refrigeradora trae la predicción de excursión y la salud del sensor.
 // Lo pueden consultar todos los roles (también el técnico de farmacia).
 const { Router } = require('express');
 const { calcularEstado } = require('../validacion/estado');
+const { predecirExcursion, saludSensor, VENTANA_SALUD_H } = require('../prediccion/modelo');
 const { ErrorNoEncontrado } = require('../errores');
 
 // Datos de la alerta que necesita la tarjeta del dashboard (HU12 / HU13 / HU04)
@@ -19,6 +21,7 @@ function resumenAlerta(a) {
 async function estadoDe(repo, refrigeradora, sensores, ahora, alertas = []) {
   const sensor = sensores.find((s) => s.refrigeradora_id === refrigeradora.id) || null;
   const lectura = sensor ? await repo.ultimaLectura(sensor.dispositivo_id) : null;
+  const analisis = await analizar(repo, refrigeradora, sensor, ahora);
   return {
     refrigeradora: {
       id: refrigeradora.id,
@@ -41,7 +44,25 @@ async function estadoDe(repo, refrigeradora, sensores, ahora, alertas = []) {
     ...calcularEstado({ refrigeradora, sensor, lectura, ahora }),
     // HU12 / HU13 / HU04: alertas avisadas que siguen abiertas (activas o atendidas)
     alertas: alertas.filter((a) => a.refrigeradora_id === refrigeradora.id).map(resumenAlerta),
+    ...analisis,
   };
+}
+
+// HU23: tendencia (últimos 30 min) y salud del sensor (últimas 12 h). Si falla, el estado se muestra igual.
+async function analizar(repo, refrigeradora, sensor, ahora) {
+  if (!sensor || typeof repo.lecturasDesde !== 'function') return { prediccion: null, salud_sensor: null };
+  try {
+    const desde = new Date(ahora.getTime() - VENTANA_SALUD_H * 3600000).toISOString();
+    const lecturas = await repo.lecturasDesde(sensor.dispositivo_id, desde);
+    return {
+      prediccion: predecirExcursion({
+        lecturas, tempMin: Number(refrigeradora.temp_min), tempMax: Number(refrigeradora.temp_max), ahora,
+      }),
+      salud_sensor: saludSensor({ lecturas, ahora }),
+    };
+  } catch {
+    return { prediccion: null, salud_sensor: null };
+  }
 }
 
 function rutasEstado(repo) {

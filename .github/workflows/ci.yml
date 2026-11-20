@@ -1,4 +1,8 @@
 # Integración continua (DoD: las pruebas deben pasar en GitHub Actions antes de integrar a develop)
+# Sprint 3 – HU24 (DevSecOps): además de las pruebas, cada PR pasa por 4 controles de seguridad:
+#   dependencias (npm audit) · secretos (Gitleaks) · SAST (Semgrep) · SBOM (Syft).
+# Si hay una vulnerabilidad alta/crítica, una clave en el código o un hallazgo ERROR de Semgrep,
+# el PR queda en rojo y no se puede fusionar (ruleset de develop/main).
 name: CI
 
 on:
@@ -6,6 +10,10 @@ on:
     branches: [develop, main]
   push:
     branches: [develop, main]
+
+# Mínimo privilegio: el token de GitHub Actions solo puede leer el repositorio
+permissions:
+  contents: read
 
 jobs:
   backend:
@@ -41,3 +49,64 @@ jobs:
         if: hashFiles('firmware/platformio.ini') != ''
       - run: pio test -e native
         if: hashFiles('firmware/platformio.ini') != ''
+
+  # ---------------- DevSecOps (HU24) ----------------
+  dependencias:
+    name: Seguridad · dependencias (npm audit)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        proyecto: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: '${{ matrix.proyecto }}/package-lock.json' }
+      - name: Instalar sin ejecutar scripts de terceros
+        working-directory: ${{ matrix.proyecto }}
+        run: npm ci --ignore-scripts
+      - name: Bloquea si hay vulnerabilidades altas o críticas en producción
+        working-directory: ${{ matrix.proyecto }}
+        run: npm audit --omit=dev --audit-level=high
+      - name: Reporte completo, incluye desarrollo (informativo)
+        working-directory: ${{ matrix.proyecto }}
+        run: npm audit || true
+
+  secretos:
+    name: Seguridad · secretos (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }   # revisa TODO el historial, no solo el último commit
+      - name: Instalar Gitleaks 8.28.0
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz | tar xz gitleaks
+          ./gitleaks version
+      - name: Buscar claves, tokens y contraseñas en el historial
+        run: ./gitleaks git --redact --verbose --exit-code 1 .
+
+  sast:
+    name: Seguridad · SAST (Semgrep)
+    runs-on: ubuntu-latest
+    container: { image: semgrep/semgrep }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bloquea si hay hallazgos de severidad ERROR
+        run: semgrep scan --config p/javascript --config p/nodejs --config p/react --config p/secrets --severity ERROR --error --metrics=off backend/src frontend/src
+      - name: Reporte completo (todas las severidades)
+        if: always()
+        run: semgrep scan --config p/javascript --config p/nodejs --config p/react --config p/secrets --metrics=off --json --output semgrep.json backend/src frontend/src || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: semgrep-reporte, path: semgrep.json, retention-days: 30 }
+
+  sbom:
+    name: Seguridad · SBOM (Syft)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inventario de componentes del backend (SPDX)
+        uses: anchore/sbom-action@v0
+        with: { path: ./backend, format: spdx-json, artifact-name: sbom-backend.spdx.json }
+      - name: Inventario de componentes del frontend (SPDX)
+        uses: anchore/sbom-action@v0
+        with: { path: ./frontend, format: spdx-json, artifact-name: sbom-frontend.spdx.json }
